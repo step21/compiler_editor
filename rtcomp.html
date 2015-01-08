@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<title>Solidity realtime compiler</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/pygment_trac.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<style type="text/css">
+body {
+    padding: 0px;
+    font-size: 12px;
+    color: #111111;
+}
+#optimizeBox {
+    position: absolute;
+    top: 30px;
+    left: 720px;
+    font-size: 14px;
+}
+#input {
+    position: absolute;
+    top: 120px;
+    left: 0px;
+    width: 700px;
+    bottom: 0px;
+    font-size: 15px;
+}
+#output {
+    position: absolute;
+    top: 120px;
+    left: 720px;
+    right: 10px;
+    bottom: 0px;
+    font-size: 14px;
+}
+</style>
+<script src="libs/ace.js"></script>
+<script src="mode-solidity.js"></script>
+<script src="soljs.js"></script>
+</head>
+<body>
+<h1>Solidity realtime compiler</h1>
+Source code on the left, compiled code and AST on the right (or error).
+<div id="optimizeBox">
+<input id="optimize" type="checkbox" checked="checked"><label for="optimize">optimize</label>
+</div>
+<div id="input"> contract Ballot {
+    // Create a new ballot with $(_numProposals) different proposals.
+    function Ballot(uint8 _numProposals) {
+        address sender = msg.sender;
+        chairperson = sender;
+        numProposals = _numProposals;
+    }
+
+    // Give $(voter) the right to vote on this ballot.
+    // May only be called by $(chairperson).
+    function giveRightToVote(address voter) {
+        if (msg.sender != chairperson || voted[voter]) return;
+        voterWeight[voter] = 1;
+    }
+
+    // Delegate your vote to the voter $(to).
+    function delegate(address to) {
+        address sender = msg.sender;
+        if (voted[sender]) return;
+        while (delegations[to] != address(0) && delegations[to] != sender)
+            to = delegations[to];
+        if (to == sender) return;
+        voted[sender] = true;
+        delegations[sender] = to;
+        if (voted[to]) voteCounts[votes[to]] += voterWeight[sender];
+        else voterWeight[to] += voterWeight[sender];
+    }
+
+    // Give a single vote to proposal $(proposal).
+    function vote(uint8 proposal) {
+        address sender = msg.sender;
+        if (voted[sender] || proposal >= numProposals) return;
+        voted[sender] = true;
+        votes[sender] = proposal;
+        voteCounts[proposal] += voterWeight[sender];
+    }
+
+    function winningProposal() const returns (uint8 winningProposal) {
+        uint256 winningVoteCount = 0;
+        uint8 proposal = 0;
+        while (proposal < numProposals) {
+            if (voteCounts[proposal] > winningVoteCount) {
+                winningVoteCount = voteCounts[proposal];
+                winningProposal = proposal;
+            }
+            ++proposal;
+        }
+    }
+
+    address chairperson;
+    uint8 numProposals;
+    mapping(address => uint256) voterWeight;
+    mapping(address => bool) voted;
+    mapping(address => uint8) votes;
+    mapping(address => address) delegations;
+    mapping(uint8 => uint256) voteCounts;
+}
+</div>
+<pre id="output"></pre>
+
+<div style="height: 100px;"></div>
+<p><small>Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+
+<script>
+var editor = ace.edit("input");
+editor.setTheme("ace/theme/monokai");
+editor.getSession().setMode("ace/mode/javascript");
+editor.getSession().setTabSize(4);
+editor.getSession().setUseSoftTabs(true);
+
+var compileString = Module.cwrap("compileString", "string", ["string", "number"]);
+var previousInput = '';
+var outputArea = document.querySelector('#output');
+var compile = function() {
+    var input = editor.getValue();
+    var optimize = document.querySelector('#optimize').checked;
+    try {
+        outputArea.innerHTML = compileString(input, optimize ? 1 : 0);
+    } catch (exception) {
+        outputArea.innerHTML = "Uncaught JavaScript Exception:\n" + exception;
+    }
+}
+var compileTimeout = null;
+var onChange = function() {
+    var input = editor.getValue();
+    if (input == previousInput)
+        return;
+    previousInput = input;
+    if (compileTimeout) window.clearTimeout(compileTimeout);
+    compileTimeout = window.setTimeout(compile, 300);
+};
+
+editor.getSession().on('change', onChange);
+document.querySelector('#optimize').addEventListener('change', compile);
+
+onChange();
+</script>
+</body>
+</html>

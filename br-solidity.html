@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<!--
+	Based on Miniport by HTML5 UP
+	html5up.net | @n33co
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<!-- This is bitrights splash integrated with solidity realtime compiler/editor + enhancements -->
+<html>
+	<head>
+		<title>Bitrights - Era of the bit</title>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<meta name="description" content="" />
+		<meta name="keywords" content="" />
+		<!--[if lte IE 8]><script src="css/ie/html5shiv.js"></script><![endif]-->
+		<script src="js/jquery.min.js"></script>
+		<script src="js/jquery.scrolly.min.js"></script>
+		<script src="js/skel.min.js"></script>
+		<script src="js/init.js"></script>
+		<script src="js/custom.js"></script>
+		<!-- from solidity compile -->
+			<script src="libs/ace.js"></script>
+			<script src="mode-solidity.js"></script>
+			<script src="soljs.js"></script>
+
+		<noscript>
+			<link rel="stylesheet" href="css/basic.css" />
+			<link rel="stylesheet" href="css/skel.css" />
+			<link rel="stylesheet" href="css/style.css" />
+			<link rel="stylesheet" href="css/styles.css" />
+			<link rel="stylesheet" href="css/style-desktop.css" />
+			<!-- from solidity compile -->
+				<link rel="stylesheet" href="css/styles.css">
+				<link rel="stylesheet" href="css/pygment_trac.css">
+			
+		</noscript>
+		<!--[if lte IE 8]><link rel="stylesheet" href="css/ie/v8.css" /><![endif]-->
+		<!--[if lte IE 9]><link rel="stylesheet" href="css/ie/v9.css" /><![endif]-->
+	</head>
+	<body>
+
+		<!-- Nav -->
+			<nav id="nav">
+				<ul class="container">
+					<li><a href="#top">Bitrights</a></li>
+					<li><a href="#plans">Vision</a></li>
+					<li><a href="#team">Team</a></li>
+					<li><a href="#contact">Contact</a></li>
+				</ul>
+			</nav>
+
+		<!-- Home -->
+			<div class="wrapper style1 first"> <!--  first -->
+				<article class="container" id="top">
+					<div class="row">
+						<div class="2u">
+							<span class="icon featured fa-star"></span>
+						</div>
+						<div class="10u">
+							<header>
+								<h1>Contract Editor.</h1>
+							</header>
+						</div>
+					</div>
+				</article>
+			</div>
+
+			<!-- <div class="wrapper style2">
+				<article class="container" id="bp">
+				<div class="12u">
+					-->
+						<div id="optimizeBox">
+<input id="optimize" type="checkbox" checked="checked"><label for="optimize">optimize</label>
+</div>
+<div id="input"> 
+</div>
+<pre id="output"></pre>
+
+<div style="height: 100px;"></div>
+<p><small>Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+
+<script>
+var editor = ace.edit("input");
+editor.setTheme("ace/theme/monokai");
+editor.getSession().setMode("ace/mode/javascript");
+editor.getSession().setTabSize(4);
+editor.getSession().setUseSoftTabs(true);
+
+var compileString = Module.cwrap("compileString", "string", ["string", "number"]);
+var previousInput = '';
+var outputArea = document.querySelector('#output');
+var compile = function() {
+    var input = editor.getValue();
+    var optimize = document.querySelector('#optimize').checked;
+    try {
+        outputArea.innerHTML = compileString(input, optimize ? 1 : 0);
+    } catch (exception) {
+        outputArea.innerHTML = "Uncaught JavaScript Exception:\n" + exception;
+    }
+}
+var compileTimeout = null;
+var onChange = function() {
+    var input = editor.getValue();
+    if (input == previousInput)
+        return;
+    previousInput = input;
+    if (compileTimeout) window.clearTimeout(compileTimeout);
+    compileTimeout = window.setTimeout(compile, 300);
+};
+
+editor.getSession().on('change', onChange);
+document.querySelector('#optimize').addEventListener('change', compile);
+
+onChange();
+</script>
+					<!-- </section>
+				</div>
+				</article>
+			-->
+					
+				<div class="wrapper style4">
+
+					<article class="container 75%">
+						<footer>
+							<ul id="copyright">
+								<li>&copy; Bitrights. Some or all rights rights reserved unless otherwise specified.</li><li>Design based on Miniport by <a href="http://html5up.net">HTML5 UP</a></li><li>Font in Logo: <a href="http://alef.hagilda.com/">Alef</a> licensed under <a href="http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL">SIL Open Font License</a></li><li></li>
+							</ul>
+						</footer>
+					</article>
+				</div>
+	</body>
+</html>
